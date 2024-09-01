@@ -1,0 +1,17 @@
+name: Update rates
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -i -X POST https://money-calculator.fly.dev/api/update -H "Authorization: $CRON_SECRET"
