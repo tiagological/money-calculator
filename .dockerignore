@@ -36,6 +36,3 @@ next-env.d.ts
 
 # db
 prisma/dev.db
-
-# env variables
-.env.local
