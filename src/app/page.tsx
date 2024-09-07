@@ -3,6 +3,9 @@ import { ChangeEvent, useMemo, useState, useEffect } from 'react';
 import { currencies, homeCurrencies } from './data';
 import getUserLocale from 'get-user-locale';
 import Form from '@/components/Form';
+import Table from '@/components/Table';
+import type { Currency } from './data';
+import { formatDate } from '@/utils';
 
 export type DataObj = {
   id: number;
@@ -18,6 +21,25 @@ export type DataObj = {
     foreignCurrency?: boolean;
     amount?: boolean;
   };
+};
+
+export type ResponseData = {
+  amount: number;
+  currency: Currency;
+  rate: number;
+  updatedAt: string;
+  id: string;
+  homeCurrency: Currency;
+};
+
+type Response = {
+  amount: number;
+  data: ResponseData[];
+};
+
+type ResponseStateValue = {
+  amount: string;
+  data: ResponseData[];
 };
 
 const newEntry = {
@@ -39,7 +61,7 @@ export default function Home() {
   const [dataList, setDataList] = useState<DataObj[]>([newEntry]);
   const [homeCurrency, setHomeCurrency] = useState<null | string>(null);
   const [homeCurrencyError, setHomeCurrencyError] = useState(false);
-  const [res, setRes] = useState<null | string>(null);
+  const [res, setRes] = useState<null | ResponseStateValue>(null);
   const [err, setErr] = useState<null | string>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formChanged, setFormChanged] = useState(false);
@@ -119,13 +141,13 @@ export default function Home() {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as { amount: number };
+        const data = (await response.json()) as Response;
         const locale = getUserLocale();
         const formattedAmount = Intl.NumberFormat(locale, {
           style: 'currency',
           currency: homeCurrency,
         }).format(data.amount);
-        setRes(formattedAmount);
+        setRes({ amount: formattedAmount, data: data.data });
         setFormChanged(false);
         return setIsLoading(false);
       }
@@ -202,9 +224,14 @@ export default function Home() {
       </p>
       <Form {...formProps} />
       {res ? (
-        <p className="my-2 text-center" ref={callbackRef}>
-          Your currency is worth: {res}
-        </p>
+        <>
+          <p className="my-2 text-center" ref={callbackRef}>
+            Your currency is worth: {res.amount}
+          </p>
+          <p className="my-2 text-center">{`Here's the breakdown`}: </p>
+          <Table data={res.data} />
+          <p>Last updated at: {formatDate(res.data[0].updatedAt)}</p>
+        </>
       ) : null}
       {err ? (
         <p className="my-2 text-rose-500 text-center" ref={callbackRef}>
