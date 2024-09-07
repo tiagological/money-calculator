@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { HOME_CURRENCIES, CURRENCY_CODES } from '@/app/data';
 import { ZodError, z } from 'zod';
 import prisma from 'prisma/client';
+import { randomUUID } from 'crypto';
 
 const schema = z.array(
   z.object({
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
         rate: true,
         base_currency: true,
         target_currency: true,
+        updated_at: true,
       },
     });
 
@@ -37,6 +39,10 @@ export async function POST(request: Request) {
       rate: res.find((item) => item.target_currency === entry.foreignCurrency)
         ?.rate as number,
       amount: entry.amount,
+      updatedAt: res.find(
+        (item) => item.target_currency === entry.foreignCurrency
+      )?.updated_at,
+      currency: entry.foreignCurrency,
     }));
 
     const total = enrichedData.reduce((acc, value) => {
@@ -45,7 +51,18 @@ export async function POST(request: Request) {
       return acc + amount;
     }, 0);
 
-    return NextResponse.json({ amount: total });
+    const finalData = enrichedData.map((entry) => ({
+      ...entry,
+      rate: 1 / entry.rate,
+      amount: parseInt(entry.amount, 10) * (1 / entry.rate),
+      id: randomUUID(),
+      homeCurrency: data[0].homeCurrency,
+    }));
+
+    return NextResponse.json({
+      amount: total,
+      data: finalData,
+    });
   } catch (err) {
     console.log(err);
     if (err instanceof ZodError) {
