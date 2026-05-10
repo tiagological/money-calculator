@@ -14,4 +14,4 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -i -X POST https://money-calculator.fly.dev/api/update -H "Authorization: $CRON_SECRET"
+          curl -i --fail --retry 3 --retry-delay 10 -X POST https://money-calculator.fly.dev/api/update -H "Authorization: $CRON_SECRET"

@@ -37,12 +37,10 @@ const getData = async (currency: HomeCurrency) => {
     const data = await fetchDataPromise(currency);
     for (const targetCurrency in data.conversion_rates) {
       if (targetCurrency === currency) continue;
-      await prisma.rate.update({
+      await prisma.rate.updateMany({
         where: {
-          base_currency_target_currency: {
-            base_currency: currency,
-            target_currency: targetCurrency,
-          },
+          base_currency: currency,
+          target_currency: targetCurrency,
         },
         data: {
           rate: data.conversion_rates[targetCurrency as Currency],
@@ -62,9 +60,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    HOME_CURRENCIES.forEach((currency) => {
-      return getData(currency);
-    });
+    await Promise.all(HOME_CURRENCIES.map((currency) => getData(currency)));
 
     return NextResponse.json({ message: 'success' });
   } catch (err) {
