@@ -45,11 +45,15 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y openssl && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+# Install prisma CLI so migrations run at startup without downloading from npm
+RUN npm install -g prisma@5.18.0
+
 # Copy built application
 COPY --from=build /app/.next/standalone /app
 COPY --from=build /app/.next/static /app/.next/static
 COPY --from=build /app/public /app/public
 COPY docker-entrypoint.js /app/docker-entrypoint.js
+RUN chmod +x /app/docker-entrypoint.js
 COPY prisma /app/prisma
 
 # Setup sqlite3 on a separate volume

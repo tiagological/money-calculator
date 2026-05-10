@@ -7,7 +7,7 @@ const env = { ...process.env };
 (async () => {
   // If running the web server then migrate existing database
   if (process.argv.slice(2).join(' ') === 'node server.js') {
-    await exec('npx prisma@5.18.0 migrate deploy');
+    await exec('prisma migrate deploy');
   }
 
   // launch application
